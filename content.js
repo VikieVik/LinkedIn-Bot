@@ -38,14 +38,16 @@ function onGettingMessageFromPopup(message, sender, sendResponse) {
             var confirmationModalSendButton = document.querySelectorAll(
               '[aria-label="Send now"]'
             );
+
+            //check for sendnow button on popup
             if (
               confirmationModalSendButton !== null &&
               confirmationModalSendButton !== undefined &&
               confirmationModalSendButton.length > 0
             ) {
               confirmationModalSendButton[0].click();
-              sendConnectBtnClickConfirmationToPopup();
             }
+            sendConnectBtnClickConfirmationToPopup();
             confirmationModalSendButton = [];
           }, 2000);
         }
@@ -63,6 +65,7 @@ function onGettingMessageFromPopup(message, sender, sendResponse) {
         connectConfirmation: "connect invite sent",
       },
       function (response) {
+        //enable for debugging
         //console.dir(response);
       }
     );
