@@ -1,84 +1,70 @@
-//listen for events from chrome extention's background sctipts
-chrome.runtime.onMessage.addListener(gotMessage);
-
 var connectButtonList = [];
-var i = 0;
-var modalSendBtnElement = [];
+var btnIndex = 0;
+var confirmationModalSendButton = [];
+
+//listen for events from chrome extention's background sctipts
+chrome.runtime.onMessage.addListener(onGettingMessageFromPopup);
 
 //callback for above event listener
-//checks for a specific message from background script and changes page concepts
-function gotMessage(message, sender, sendResponse) {
-  console.log(message.startConnecting);
-
+//checks for a specific message from background script get connect buttons from DOM
+function onGettingMessageFromPopup(message, sender, sendResponse) {
   if (message.startConnecting === true) {
-    var buttons = document.getElementsByTagName("button");
-    for (btn of buttons) {
-      btn.style["border"] = "1px solid #1890ff";
-    }
+    var allButtonsOnWebsite = document.getElementsByTagName("button");
 
-    //check and push all connect  button element in one array
-    for (let i = 0; i <= buttons.length; i++) {
-      if (buttons[i] !== undefined) {
-        if (buttons[i].lastChild.innerText === "Connect") {
-          connectButtonList.push(buttons[i]);
+    //get connect buttons & save into connectButtonList[]
+    for (let i = 0; i <= allButtonsOnWebsite.length; i++) {
+      if (allButtonsOnWebsite[i] !== undefined) {
+        if (allButtonsOnWebsite[i].lastChild.innerText === "Connect") {
+          connectButtonList.push(allButtonsOnWebsite[i]);
         }
       }
-      console.log("connectButtonList prepared");
     }
-
-    i = 0; //reset counter
-    sendConnectRequestLoop(); //  start the loop
+    sendConnectRequestLoop();
   } else {
     connectButtonList = [];
-    modalSendBtnElement = [];
+    confirmationModalSendButton = [];
   }
 
-  //Loop through NodeList and call the click() function on each button
+  //Click all connect button with 5 sec delay
   function sendConnectRequestLoop() {
-    setTimeout(function () {
-      if (connectButtonList[i] !== undefined) {
-        if (connectButtonList[i].lastChild.innerText === "Connect") {
+    setTimeout(() => {
+      if (connectButtonList[btnIndex] !== undefined) {
+        if (connectButtonList[btnIndex].lastChild.innerText === "Connect") {
           //click the button
-          connectButtonList[i].click();
+          connectButtonList[btnIndex].click();
 
+          //wait 2 sec and click send now button of confirmation popup
           setTimeout(() => {
-            var modalSendBtnElement = document.querySelectorAll(
+            var confirmationModalSendButton = document.querySelectorAll(
               '[aria-label="Send now"]'
             );
-            console.log(modalSendBtnElement);
             if (
-              modalSendBtnElement !== null &&
-              modalSendBtnElement !== undefined
+              confirmationModalSendButton !== null &&
+              confirmationModalSendButton !== undefined &&
+              confirmationModalSendButton.length > 0
             ) {
-              console.log(modalSendBtnElement[0]);
-              modalSendBtnElement[0].click();
+              confirmationModalSendButton[0].click();
+              sendConnectBtnClickConfirmationToPopup();
             }
-            modalSendBtnElement = [];
+            confirmationModalSendButton = [];
           }, 2000);
-
-          chrome.runtime.sendMessage(
-            {
-              connectionCount: i + 1,
-            },
-            function (response) {
-              console.dir(response);
-            }
-          );
         }
       }
-      i++;
-      if (i <= connectButtonList.length) {
+      btnIndex++;
+      if (btnIndex <= connectButtonList.length) {
         sendConnectRequestLoop();
       }
     }, 5000);
   }
-}
 
-function gotTabInfoCallback() {
-  console.log("got tabs data", tab);
-  console.log("sending message");
-  let messagePayload = {
-    txt: "hello from content.js",
-  };
-  chrome.runtime.sendMessage(tab[0].id, messagePayload);
+  function sendConnectBtnClickConfirmationToPopup() {
+    chrome.runtime.sendMessage(
+      {
+        connectConfirmation: "connect invite sent",
+      },
+      function (response) {
+        //console.dir(response);
+      }
+    );
+  }
 }

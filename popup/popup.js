@@ -1,6 +1,4 @@
 window.onload = function () {
-  console.log("popup.js started");
-
   var connectionCount = 1;
 
   //Listen for messages from content.js
@@ -10,34 +8,35 @@ window.onload = function () {
     sendResponse
   ) {
     sendResponse({
-      data: "linkedin connect click count received",
+      data: "connect acknowledgement received by popup",
     });
-    //console.log(message);
-    document.getElementById("connection-counter").innerHTML = connectionCount++;
+    let sentInviteCountUI = document.getElementById("connection-counter");
+    sentInviteCountUI.innerHTML = connectionCount++;
   });
 
-  document.getElementById("start-stop-button").onclick = buttonCliked;
+  var startStopButton = document.getElementById("start-stop-button");
+  startStopButton.onclick = handleButtonClicked;
 
-  //handle connect button click
-  function buttonCliked() {
-    chrome.tabs.query({ active: true, currentWindow: true }, onGettingTabInfo);
+  //handle start/stop connect button click
+  function handleButtonClicked() {
+    chrome.tabs.query(
+      { active: true, currentWindow: true },
+      onGettingBrowserTabInfo
+    );
   }
 };
 
-var startConnecting = false;
+var startSendingInvite = false;
 
-function onGettingTabInfo(tab) {
-  console.log("got tab data", tab);
-  console.log("sending message");
-
-  let messagePayload = {
-    startConnecting: !startConnecting,
+function onGettingBrowserTabInfo(currentTab) {
+  let messagePayloadForContentScript = {
+    startConnecting: !startSendingInvite,
   };
-  startConnecting = !startConnecting;
+  startSendingInvite = !startSendingInvite;
+
   //change botton color & text of button for start/stop state
-  if (startConnecting) {
+  if (startSendingInvite) {
     let startStopBtnElement = document.getElementById("start-stop-button");
-    console.log(startStopBtnElement);
     startStopBtnElement.style["background-color"] = "#F3B4B3";
     startStopBtnElement.innerHTML = "STOP CONNECTING";
   } else {
@@ -45,5 +44,5 @@ function onGettingTabInfo(tab) {
     startStopBtnElement.style["background-color"] = "#8cc99f";
     startStopBtnElement.innerHTML = "START CONNECTING";
   }
-  chrome.tabs.sendMessage(tab[0].id, messagePayload);
+  chrome.tabs.sendMessage(currentTab[0].id, messagePayloadForContentScript);
 }
