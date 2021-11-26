@@ -2,7 +2,7 @@ var connectButtonList = [];
 var btnIndex = 0;
 var confirmationModalSendButton = [];
 
-//listen for events from chrome extention's background sctipts
+//listen for messages from popup.js
 chrome.runtime.onMessage.addListener(onGettingMessageFromPopup);
 
 //callback for above event listener
